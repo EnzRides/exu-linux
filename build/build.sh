@@ -1,5 +1,5 @@
 #!/bin/bash
-# Exu Linux ISO Build Script - Fixed temp handling
+# Exu Linux ISO Build Script - Fixed with proper temp handling
 # This script builds the Exu Linux ISO from source
 
 PURPLE='\033[0;35m'
@@ -31,6 +31,10 @@ for dep in "${DEPS[@]}"; do
 done
 echo -e "${GREEN}[✓]${RESET} All dependencies found"
 echo ""
+
+# Clean /tmp first
+echo -e "${GREEN}[*]${RESET} Cleaning /tmp..."
+rm -rf /tmp/* 2>/dev/null || true
 
 # Use home directory for build (not /tmp which is small)
 BUILD_BASE="$HOME/exu-iso-build-work"
@@ -248,9 +252,9 @@ EOFPROFILE
 
 chmod +x airootfs/etc/profile.d/exu.sh
 
-# Build ISO using home directory for temp
+# Build ISO
 echo -e "${GREEN}[*]${RESET} Building ISO image..."
-echo -e "${GREEN}[*]${RESET} This may take 10-30 minutes..."
+echo -e "${GREEN}[*]${RESET} This may take 15-40 minutes..."
 echo ""
 
 # Set work directory for archiso
@@ -262,8 +266,14 @@ echo -e "${GREEN}[*]${RESET} Using build directory: $BUILD_BASE"
 echo -e "${GREEN}[*]${RESET} Using temp directory: $WORK_TMP"
 echo ""
 
+# Set environment variables to avoid /tmp
+export TMPDIR="$WORK_TMP"
+export TMP="$WORK_TMP"
+export TEMP="$WORK_TMP"
+
 # Run mkarchiso with explicit temp directory
-mkarchiso -v -w "$WORK_TMP" -o "$OUTPUT_DIR" .
+# Use BUILDDIR to ensure archiso uses our temp dir
+BUILDDIR="$WORK_TMP" mkarchiso -v -w "$WORK_TMP" -o "$OUTPUT_DIR" .
 
 echo ""
 echo -e "${GREEN}[✓]${RESET} ISO build complete!"
