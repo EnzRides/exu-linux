@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Exu Linux Boot Splash Screen Configuration -->
+<branding version="2">
+  <brand>
+    <name>Exu Linux</name>
+    <version>1.0</version>
+  </brand>
+  
+  <show>
+    <message="Exu Linux - Booting..."/>
+  </show>
+  
+  <slideshow>
+    <background-color>#2D3436</background-color>
+    <logo-color>#6C5CE7</logo-color>
+    <text-color>#F5F6FA</text-color>
+  </slideshow>
+</branding>

@@ -1,0 +1,73 @@
+# Essential Exu Linux Packages
+# Base system packages required for ISO build
+
+# Base system
+base
+base-devel
+linux
+linux-firmware
+
+# Boot loader
+grub
+efibootmgr
+os-prober
+
+# Desktop Environment - KDE Plasma
+plasma-desktop
+plasma-wayland-session
+plasma-nm
+plasma-pa
+plasma-workspace
+kde-applications
+kdeconnect
+
+# Core applications
+konsole
+dolphin
+kwrite
+kspread
+kalarm
+kcalc
+
+# Utilities
+nano
+vim
+git
+man-pages
+neofetch
+htop
+curl
+wget
+compression-tools
+
+# Network
+networkmanager
+networkmanager-qt
+openvpn
+netcat
+
+# Display & Graphics
+xorg-server
+xorg-xinit
+mesa
+xf86-video-vesa
+
+# Audio
+pulseaudio
+pa-applet-git
+
+# Fonts
+noto-fonts
+noto-fonts-emoji
+terminus-font
+
+# System tools
+sudo
+wheel
+wheel
+systemd
+upower
+
+# Custom Exu tools
+exufetch
+exu-branding

@@ -1,0 +1,19 @@
+---
+branding:
+  distribution: Exu Linux
+  logo: logo.png
+  logo_text: Exu Linux
+  icon: exulinux
+  primary_color: "#6C5CE7"
+  secondary_color: "#A29BFE"
+  accent_color: "#00B894"
+  text_dark: "#2D3436"
+  text_light: "#F5F6FA"
+
+slideshow:
+  images_dir: images
+  interval: 5000
+
+sidebar:
+  background_color: "#2D3436"
+  text_color: "#F5F6FA"

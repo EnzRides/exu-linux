@@ -1,0 +1,32 @@
+# Build artifacts
+*.iso
+*.iso.sig
+/build/*.log
+/tmp/
+/dist/
+*.tar.gz
+*.zip
+
+# System files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.cache/
+
+# Development
+.vscode/
+.idea/
+*.pyc
+__pycache__/
+.env
+.env.local
+
+# Package files
+*.pkg.tar.xz
+*.pkg.tar.zst
+
+# ISO build
+/tmp/archiso-tmp/
+/tmp/exu-output/
