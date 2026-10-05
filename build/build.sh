@@ -236,7 +236,9 @@ if [ -z "$EXUFETCH_SHOWN" ]; then
 fi
 EOFBASH
 
-# Create custom profile for Exu
+# Create custom profile for Exu - make sure directory exists
+echo -e "${GREEN}[*]${RESET} Creating Exu Linux profile..."
+mkdir -p airootfs/etc/profile.d
 cat > airootfs/etc/profile.d/exu.sh << 'EOFPROFILE'
 # Exu Linux environment
 export PATH="/usr/local/bin:$PATH"
