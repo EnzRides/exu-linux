@@ -1,21 +1,16 @@
 #!/bin/bash
-# Exu Linux ISO Build Script
+# Exu Linux ISO Build Script - Simplified Version
 # This script builds the Exu Linux ISO from source
 
 set -e
 
-# Get the directory where this script is located
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-REPO_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
-
-# Color output
 PURPLE='\033[0;35m'
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 RESET='\033[0m'
 
 echo -e "${PURPLE}╔════════════════════════════════════════════════════════════╗${RESET}"
-echo -e "${PURPLE}║       Exu Linux ISO Builder v1.0       ║${RESET}"
+echo -e "${PURPLE}║       Exu Linux ISO Builder v1.0                          ║${RESET}"
 echo -e "${PURPLE}╚════════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 
@@ -51,11 +46,11 @@ echo -e "${GREEN}[*]${RESET} Setting up archiso base..."
 cp -r /usr/share/archiso/configs/releng exu-build
 cd exu-build
 
-# Customize packages
+# Add Exu Linux packages to packages.x86_64
 echo -e "${GREEN}[*]${RESET} Adding Exu Linux packages..."
-cat >> packages.x86_64 << 'EOF'
+cat >> packages.x86_64 << 'EOFPKG'
 
-# KDE Plasma Desktop
+# KDE Plasma Desktop Environment
 plasma-desktop
 plasma-wayland-session
 plasma-nm
@@ -66,8 +61,9 @@ konsole
 dolphin
 kwrite
 kcalc
+kdeconnect
 
-# System utilities
+# System Utilities  
 neofetch
 htop
 git
@@ -75,46 +71,170 @@ curl
 wget
 nano
 vim
+tree
+
+# Display & Graphics
+xorg-server
+xorg-xinit
+mesa
 
 # Fonts
 noto-fonts
 noto-fonts-emoji
+ttf-liberation
+
+# Audio
+pulseaudio
+pulseaudio-alsa
+
+# Networking
+networkmanager
+openssh
 
 # Other essentials
-networkmanager
+base-devel
 sudo
-EOF
+EOFPKG
 
-# Copy Calamares config
-echo -e "${GREEN}[*]${RESET} Configuring Calamares installer..."
-mkdir -p "airootfs/etc/calamares"
-cp "$REPO_ROOT/installer/calamares/settings.conf" "airootfs/etc/calamares/" 2>/dev/null || echo -e "${PURPLE}[~]${RESET} Calamares settings not found (optional)"
+# Create basic Calamares config inline (no file dependencies)
+echo -e "${GREEN}[*]${RESET} Configuring installer..."
+mkdir -p airootfs/etc/calamares
+cat > airootfs/etc/calamares/settings.conf << 'EOFCAL'
+branding: exu
 
-mkdir -p "airootfs/usr/share/calamares/branding/exu"
-cp -r "$REPO_ROOT/installer/calamares/branding/exu/"* "airootfs/usr/share/calamares/branding/exu/" 2>/dev/null || echo -e "${PURPLE}[~]${RESET} Calamares branding not found (optional)"
+instances:
+  - id: root
+    weight: 80
+    critical: true
 
-# Add KDE Plasma theme
-echo -e "${GREEN}[*]${RESET} Adding KDE Plasma theme..."
-mkdir -p "airootfs/etc/skel/.local/share/color-schemes"
-cp "$REPO_ROOT/kde-plasma-theme/color-scheme/"*.colors "airootfs/etc/skel/.local/share/color-schemes/" 2>/dev/null || echo -e "${PURPLE}[~]${RESET} Color schemes not found (optional)"
+sequence:
+  - show:
+    - welcome
+    - locale
+    - keyboard
+    - partition
+    - users
+    - summary
+  - exec:
+    - partition
+    - mount
+    - unpackfs
+    - machineid
+    - fstab
+    - locale
+    - keyboard
+    - localtime
+    - users
+    - displaymanager
+    - networkcfg
+    - grubcfg
+    - bootloader
+    - umount
+  - show:
+    - finished
+EOFCAL
 
-# Add ExuFetch
-echo -e "${GREEN}[*]${RESET} Adding ExuFetch tool..."
-mkdir -p "airootfs/usr/local/bin"
-cp "$REPO_ROOT/exufetch/exufetch.sh" "airootfs/usr/local/bin/exufetch"
-chmod +x "airootfs/usr/local/bin/exufetch"
+# Add ExuFetch inline (no file dependencies)
+echo -e "${GREEN}[*]${RESET} Adding ExuFetch system information tool..."
+mkdir -p airootfs/usr/local/bin
+cat > airootfs/usr/local/bin/exufetch << 'EOFETCH'
+#!/bin/bash
+# ExuFetch - System Information for Exu Linux
 
-# Add branding
+PURPLE='\033[38;2;108;92;231m'
+GREEN='\033[38;2;0;184;148m'
+LIGHT='\033[38;2;245;246;250m'
+RESET='\033[0m'
+BOLD='\033[1m'
+
+print_logo() {
+    echo -e "${PURPLE}"
+    echo "    ╔═══════════════════════════════════╗"
+    echo "    ║       EXU LINUX v1.0              ║"
+    echo "    ║   Simple. Fast. Beautiful.        ║"
+    echo "    ╚═══════════════════════════════════╝"
+    echo -e "${RESET}"
+}
+
+print_info() {
+    echo -e "${BOLD}${PURPLE}System Information${RESET}"
+    echo -e "${PURPLE}───────────────────────────────────${RESET}"
+    echo -e "${GREEN}OS${RESET}           ${LIGHT}Exu Linux${RESET}"
+    echo -e "${GREEN}Kernel${RESET}       ${LIGHT}$(uname -r)${RESET}"
+    echo -e "${GREEN}Uptime${RESET}       ${LIGHT}$(uptime -p 2>/dev/null || echo 'N/A')${RESET}"
+    echo -e "${GREEN}Desktop${RESET}      ${LIGHT}KDE Plasma${RESET}"
+    echo -e "${GREEN}Shell${RESET}        ${LIGHT}$(basename $SHELL)${RESET}"
+    echo -e "${GREEN}Packages${RESET}     ${LIGHT}$(pacman -Q 2>/dev/null | wc -l)${RESET}"
+    echo -e ""
+    echo -e "${BOLD}${PURPLE}Hardware${RESET}"
+    echo -e "${PURPLE}───────────────────────────────────${RESET}"
+    echo -e "${GREEN}CPU${RESET}         ${LIGHT}$(lscpu 2>/dev/null | grep 'Model name' | cut -d':' -f2 | xargs || echo 'Unknown')${RESET}"
+    echo -e "${GREEN}Memory${RESET}      ${LIGHT}$(free -h 2>/dev/null | awk '/^Mem/ {print $3 " / " $2}' || echo 'N/A')${RESET}"
+    echo -e "${GREEN}Disk${RESET}        ${LIGHT}$(df -h / 2>/dev/null | awk 'NR==2 {print $3 " / " $2}' || echo 'N/A')${RESET}"
+    echo -e ""
+    echo -e "${LIGHT}Simple. Fast. Beautiful.${RESET}"
+}
+
+print_logo
+print_info
+EOFETCH
+
+chmod +x airootfs/usr/local/bin/exufetch
+
+# Add Exu branding colors
 echo -e "${GREEN}[*]${RESET} Adding Exu Linux branding..."
-mkdir -p "airootfs/etc/exu"
-cp "$REPO_ROOT/branding/colors/exu-colors.conf" "airootfs/etc/exu/" 2>/dev/null || echo -e "${PURPLE}[~]${RESET} Branding colors not found (optional)"
+mkdir -p airootfs/etc/exu
+cat > airootfs/etc/exu/colors.conf << 'EOFCOL'
+EXU_PRIMARY=#6C5CE7
+EXU_PRIMARY_LIGHT=#A29BFE
+EXU_ACCENT=#00B894
+EXU_DARK=#2D3436
+EXU_LIGHT=#F5F6FA
+EXU_TEXT_DARK=#1E1E1E
+EXU_TEXT_LIGHT=#FFFFFF
+EOFCOL
 
-# Create rootfs hooks for branding
-mkdir -p "airootfs/root"
-cat > "airootfs/root/.bashrc" << 'EOF'
-# Exu Linux bashrc
+# Create KDE Plasma color scheme inline
+mkdir -p airootfs/etc/skel/.local/share/color-schemes
+cat > airootfs/etc/skel/.local/share/color-schemes/ExuLinux.colors << 'EOFCOLORS'
+[ColorScheme]
+Name=Exu Linux
+
+[General]
+ForegroundNormal=30,30,30
+BackgroundNormal=245,246,250
+
+[Button]
+BackgroundNormal=240,241,245
+ForegroundNormal=30,30,30
+
+[Selection]
+BackgroundNormal=108,92,231
+ForegroundNormal=245,246,250
+
+[View]
+BackgroundNormal=245,246,250
+ForegroundNormal=30,30,30
+
+[Window]
+BackgroundNormal=240,241,245
+ForegroundNormal=30,30,30
+EOFCOLORS
+
+# Create custom bashrc for Exu branding
+mkdir -p airootfs/root
+cat > airootfs/root/.bashrc << 'EOFBASH'
+# Exu Linux bash configuration
 export PS1="\[\033[38;2;108;92;231m\]exu\[\033[0m\]@\h:\w$ "
-EOF
+
+# Welcome message
+if [ -z "$EXUFETCH_SHOWN" ]; then
+    echo ""
+    /usr/local/bin/exufetch
+    echo ""
+    export EXUFETCH_SHOWN=1
+fi
+EOFBASH
 
 # Build ISO
 echo -e "${GREEN}[*]${RESET} Building ISO image..."
@@ -122,10 +242,11 @@ echo -e "${GREEN}[*]${RESET} This may take 10-30 minutes..."
 echo ""
 
 OUTPUT_DIR="/tmp/exu-output"
+rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
 # Run mkarchiso
-sudo mkarchiso -v -w /tmp/archiso-tmp -o "$OUTPUT_DIR" .
+mkarchiso -v -w /tmp/archiso-tmp -o "$OUTPUT_DIR" .
 
 echo ""
 echo -e "${GREEN}[✓]${RESET} ISO build complete!"
@@ -143,9 +264,11 @@ if [ -f "$ISO_FILE" ]; then
     echo -e "${PURPLE}Next steps:${RESET}"
     echo -e "  1. Write to USB: ${GREEN}sudo dd if=$ISO_FILE of=/dev/sdX bs=4M status=progress${RESET}"
     echo -e "  2. Replace sdX with your USB device (use 'lsblk' to find it)"
-    echo -e "  3. Boot from USB and run the Calamares installer"
+    echo -e "  3. Sync: ${GREEN}sync${RESET}"
+    echo -e "  4. Boot from USB and follow the installer"
     echo ""
 else
     echo -e "${RED}[!]${RESET} ISO file not found in $OUTPUT_DIR"
+    ls -la "$OUTPUT_DIR"
     exit 1
 fi
