@@ -1,8 +1,6 @@
 #!/bin/bash
-# Exu Linux ISO Build Script - Simplified Version
+# Exu Linux ISO Build Script - Fixed temp handling
 # This script builds the Exu Linux ISO from source
-
-set -e
 
 PURPLE='\033[0;35m'
 GREEN='\033[0;32m'
@@ -34,10 +32,15 @@ done
 echo -e "${GREEN}[✓]${RESET} All dependencies found"
 echo ""
 
-# Create work directory
-WORK_DIR="/tmp/exu-iso-build"
+# Use home directory for build (not /tmp which is small)
+BUILD_BASE="$HOME/exu-iso-build-work"
+WORK_DIR="$BUILD_BASE/exu-iso-build"
+OUTPUT_DIR="$BUILD_BASE/exu-output"
+
+echo -e "${GREEN}[*]${RESET} Cleaning old build directories..."
+rm -rf "$BUILD_BASE"
+
 echo -e "${GREEN}[*]${RESET} Creating work directory at $WORK_DIR..."
-rm -rf "$WORK_DIR"
 mkdir -p "$WORK_DIR"
 cd "$WORK_DIR"
 
@@ -91,12 +94,11 @@ networkmanager
 openssh
 
 # Other essentials
-base-devel
 sudo
 which
 EOFPKG
 
-# Create basic Calamares config inline (no file dependencies)
+# Create basic Calamares config inline
 echo -e "${GREEN}[*]${RESET} Configuring installer..."
 mkdir -p airootfs/etc/calamares
 cat > airootfs/etc/calamares/settings.conf << 'EOFCAL'
@@ -134,7 +136,7 @@ sequence:
     - finished
 EOFCAL
 
-# Add ExuFetch inline (no file dependencies)
+# Add ExuFetch inline
 echo -e "${GREEN}[*]${RESET} Adding ExuFetch system information tool..."
 mkdir -p airootfs/usr/local/bin
 cat > airootfs/usr/local/bin/exufetch << 'EOFETCH'
@@ -236,7 +238,7 @@ if [ -z "$EXUFETCH_SHOWN" ]; then
 fi
 EOFBASH
 
-# Create custom profile for Exu - make sure directory exists
+# Create custom profile for Exu
 echo -e "${GREEN}[*]${RESET} Creating Exu Linux profile..."
 mkdir -p airootfs/etc/profile.d
 cat > airootfs/etc/profile.d/exu.sh << 'EOFPROFILE'
@@ -246,17 +248,22 @@ EOFPROFILE
 
 chmod +x airootfs/etc/profile.d/exu.sh
 
-# Build ISO
+# Build ISO using home directory for temp
 echo -e "${GREEN}[*]${RESET} Building ISO image..."
 echo -e "${GREEN}[*]${RESET} This may take 10-30 minutes..."
 echo ""
 
-OUTPUT_DIR="/tmp/exu-output"
-rm -rf "$OUTPUT_DIR"
+# Set work directory for archiso
+WORK_TMP="$BUILD_BASE/archiso-work"
+mkdir -p "$WORK_TMP"
 mkdir -p "$OUTPUT_DIR"
 
-# Run mkarchiso
-mkarchiso -v -w /tmp/archiso-tmp -o "$OUTPUT_DIR" .
+echo -e "${GREEN}[*]${RESET} Using build directory: $BUILD_BASE"
+echo -e "${GREEN}[*]${RESET} Using temp directory: $WORK_TMP"
+echo ""
+
+# Run mkarchiso with explicit temp directory
+mkarchiso -v -w "$WORK_TMP" -o "$OUTPUT_DIR" .
 
 echo ""
 echo -e "${GREEN}[✓]${RESET} ISO build complete!"
@@ -277,6 +284,7 @@ if [ -f "$ISO_FILE" ]; then
     echo -e "  3. Sync: ${GREEN}sync${RESET}"
     echo -e "  4. Boot from USB and follow the installer"
     echo ""
+    echo -e "${GREEN}Build files in: $BUILD_BASE${RESET}"
 else
     echo -e "${RED}[!]${RESET} ISO file not found in $OUTPUT_DIR"
     ls -la "$OUTPUT_DIR"
