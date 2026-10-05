@@ -52,11 +52,9 @@ cat >> packages.x86_64 << 'EOFPKG'
 
 # KDE Plasma Desktop Environment
 plasma-desktop
-plasma-wayland-session
 plasma-nm
 plasma-pa
-plasma-workspace
-kde-applications
+kde-applications-meta
 konsole
 dolphin
 kwrite
@@ -64,7 +62,6 @@ kcalc
 kdeconnect
 
 # System Utilities  
-neofetch
 htop
 git
 curl
@@ -72,11 +69,13 @@ wget
 nano
 vim
 tree
+bat
 
 # Display & Graphics
 xorg-server
 xorg-xinit
 mesa
+xf86-video-vesa
 
 # Fonts
 noto-fonts
@@ -84,8 +83,8 @@ noto-fonts-emoji
 ttf-liberation
 
 # Audio
-pulseaudio
-pulseaudio-alsa
+pipewire
+pipewire-audio
 
 # Networking
 networkmanager
@@ -94,6 +93,7 @@ openssh
 # Other essentials
 base-devel
 sudo
+which
 EOFPKG
 
 # Create basic Calamares config inline (no file dependencies)
@@ -230,11 +230,19 @@ export PS1="\[\033[38;2;108;92;231m\]exu\[\033[0m\]@\h:\w$ "
 # Welcome message
 if [ -z "$EXUFETCH_SHOWN" ]; then
     echo ""
-    /usr/local/bin/exufetch
+    /usr/local/bin/exufetch 2>/dev/null || true
     echo ""
     export EXUFETCH_SHOWN=1
 fi
 EOFBASH
+
+# Create custom profile for Exu
+cat > airootfs/etc/profile.d/exu.sh << 'EOFPROFILE'
+# Exu Linux environment
+export PATH="/usr/local/bin:$PATH"
+EOFPROFILE
+
+chmod +x airootfs/etc/profile.d/exu.sh
 
 # Build ISO
 echo -e "${GREEN}[*]${RESET} Building ISO image..."
